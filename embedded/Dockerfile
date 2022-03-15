@@ -1,4 +1,5 @@
-FROM alpine:3.15
+# Use Alpine with Glibc for the toolchain
+FROM frolvlad/alpine-glibc:latest
 
 # Constants
 ENV TOOLCHAIN_INSTALL_DIR="/opt/gcc-arm-none-eabi"
@@ -31,6 +32,8 @@ COPY ${ENTRYPOINT_SCRIPT_NAME} ${ENTRYPOINT_SCRIPT_DIR}
 RUN apk add --update \
 	git \
 	vim \
+	&& apk --no-cache add \
+	libstdc++ \
 	&& apk --no-cache add --virtual build-dependencies \
 	bash \
 	curl \
