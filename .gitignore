@@ -1,4 +1,3 @@
-backups
-backup2
 *.tar
 *.tar.*
+*.env*

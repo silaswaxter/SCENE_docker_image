@@ -1,7 +1,18 @@
-# Arm GCC Embedded Dev Docker
+```
+__/\\\\\\\\\\\__________/\\\\\\\\\__/\\\\\\\\\\\\\\\__/\\\\\_____/\\\__/\\\\\\\\\\\\\\\________
+_/\\\/////////\\\_____/\\\////////__\/\\\///////////__\/\\\\\\___\/\\\_\/\\\///////////________
+_\//\\\______\///____/\\\/___________\/\\\_____________\/\\\/\\\__\/\\\_\/\\\__________________
+___\////\\\__________/\\\_____________\/\\\\\\\\\\\_____\/\\\//\\\_\/\\\_\/\\\\\\\\\\\_________
+_______\////\\\______\/\\\_____________\/\\\///////______\/\\\\//\\\\/\\\_\/\\\///////_________
+___________\////\\\___\//\\\____________\/\\\_____________\/\\\_\//\\\/\\\_\/\\\_______________
+_____/\\\______\//\\\___\///\\\__________\/\\\_____________\/\\\__\//\\\\\\_\/\\\______________
+_____\///\\\\\\\\\\\/______\////\\\\\\\\\_\/\\\\\\\\\\\\\\\_\/\\\___\//\\\\\_\/\\\\\\\\\\\\\\\_
+________\///////////___________\/////////__\///////////////__\///_____\/////__\///////////////_
+```
+# Standard Custom Embedded iNventive Environment
 The goal of this project is to create a standard development environment using docker.  Code
-created with this targets arm microcontrollers;  compiled using the gcc-arm-none-eabi toolchain 
-(C/C++ and distributed by arm).  
+created with this targets arm microcontrollers;  toolchain is the gcc-arm-none-eabi (C/C++ and 
+distributed by arm).  
 
 ## Toolchain gcc-arm-none-eabi
 The toolchains packaged in many of the different linux repositories (arch, Ubunutu/Debian, alpine) 
