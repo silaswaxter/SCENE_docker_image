@@ -29,35 +29,14 @@ existing toolchain.  If there is a toolchain there with the correct name that is
 size as the "remote" toolchain, the script will not download the "remote" toolchain. Run the script
 with --help for some other options.
 
-## Container Entrypoint Script Grossness
+## Container Entrypoint Script
 **TL;DR the entry script runs whenever the docker container is run.**
 
 ### Purpose of Script
-The purpose of the script came from the need to add the path of the toolchain's binaries to the 
-$PATH enviornment variable.  The toolchain path varries depending on version because the folder 
-name of the toolchain includes version info.  Environemnt variables can be manipulated using the
-ENV directive inside the dockerfile;  however, there is no way of passing the name of the folder
-back to the toolchain and wildcards don't work.  The entrypoint script solves this by searching
-for the folder with a regex and adding the binary path to the $PATH enviornment variable.
-
-### Grossness
-There is a (WET) code smell that's hard to address, but it only matters when changing entrypoint 
-script name and/or location.  As previously hinted, the smell is from the hard-coding of
-variable-contained information into the ENTRYPOINT directive.  This is due to a couple of
-competing factors:
-
-1. Variables are good.  They keep code DRY and make it easier to change stuff.
-2. In Docker, the ENTRYPOINT directive executes before the CMD directive;  in fact, the CMD "stuff"
-is directly appended ENTRYPOINT "stuff".
-3. Within the ENTRYPOINT directive, environment variables are not evaluated directly.  In order to
-do so, one must have the ENTRYPOINT run `/bin/sh -c "some stuff with variables"`.
-
-So, in order to evaluate the variables (ie entrypoint script name and location) inside the
-ENTRYPOINT directive, the default command must be /bin/sh.  However, when the script is run through
-/bin/sh, the CMD "stuff" is no longer arguments to the script--they are arguments to /bin/sh.
-The current solution is to hardcode the entrypoint script path inside the
-ENTRYPOINT directive and supply big warning comments around the entrypoint variable declarations.
-Its awful and gross, but it works.
+The purpose of the script came from the need to add the toolchain to the $PATH enviornment 
+variable.  The toolchain path varries depending on version because the folder name of the toolchain
+is version specific.  The entrypoint script solves this by searching for the folder with a regex
+and adding the binary path to the $PATH enviornment variable.
 
 ## Future Plans
 - Slim down unnecesary parts of the toolchain

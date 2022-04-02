@@ -13,9 +13,9 @@
 #####
 # Update $PATH with toolchain binaries
 #####
-export PATH=${TOOLCHAIN_INSTALL_DIR}/$(eval ${GET_TOOLCHAIN_FILENAME})/bin:$PATH
+export PATH=${image_TOOLCHAIN_DIR}/$(eval ${GET_TOOLCHAIN_FILENAME})/bin:$PATH
 
 #####
-# Run the rest of the parameters passed to script (ie CMD)
+# Run the interactive shell
 #####
-"$@"
+$@

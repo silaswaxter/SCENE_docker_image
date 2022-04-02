@@ -13,6 +13,12 @@
 #####
 # Definitions
 #####
+# Absolute path to this script,    (eg /home/silas/bin/foo.sh)
+SCRIPT_NAME=$(readlink -f "$0")
+# Absolute path this script is in, (eg /home/silas/bin)
+SCRIPT_DIR=$(dirname "${SCRIPT_NAME}")
+
+
 # +/- Tolerance of Remote Toolchain Filesize (as fraction)
 declare -i NUMERATOR DENOMINATOR  #set integer attribute
 NUMERATOR="1"
@@ -23,6 +29,11 @@ OUTPUT_DIR="/opt/gcc-arm-none-eabi"
 
 flag_SILENT="false"
 flag_NAME_ONLY="false"
+
+#####
+# Includes
+#####
+. ${SCRIPT_DIR}/curl_functions.sh
 
 #####
 # Parse Passed Flags
@@ -73,29 +84,6 @@ done
 inform () {
 	if test "$flag_SILENT" = "false"; then
 		echo -e "$1"
-	fi
-}
-
-# FUNCTION:	Downloads a file with curl
-# ARG1:		output file name
-# ARG2:		url to download from
-# ARG3:		flags
-download_with_curl () {
-	if test "$3" == ""; then
-		curl -fL -A "Chrome" -o "$1" "$2"
-	else
-		curl -fL -A "Chrome" -o "$1" "$3" "$2"
-	fi
-
-	#Error Handling
-	if test "$?" == "0"; then
-		inform "\t success.\n"
-
-	else
-		echo -e "\t curl command failed with: $?"
-		echo -e "\t\t [TIP]: user running script needs read/write access to output dir"
-		inform "\t exiting...\n"
-		exit $?
 	fi
 }
 
