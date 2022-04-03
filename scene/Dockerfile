@@ -63,7 +63,7 @@ ENV image_INSTALL_SCRIPTS_DIR=""
 #####
 # "Function" Updates
 #####
-ENV GET_TOOLCHAIN_FILENAME="ls ${TOOLCHAIN_INSTALL_DIR} | grep '^gcc-\S*-none-eabi$'"
+ENV GET_TOOLCHAIN_FILENAME="ls ${image_TOOLCHAIN_DIR} | grep '^gcc-\S*-none-eabi$'"
 ENV DOWNLOAD_TOOLCHAIN=""
 
 #####
