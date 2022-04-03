@@ -38,7 +38,7 @@ RUN mkdir -p \
 # Copy install scripts, local packages (if they exist), and entrypoint script
 COPY gcc-arm-none-eabi*tar.xz ${image_TOOLCHAIN_DIR}
 COPY ${local_INSTALL_SCRIPTS_DIR} ${image_INSTALL_SCRIPTS_DIR}
-COPY ${ENTRYPOINT_SCRIPT_NAME} ${image_ENTRYPOINT_SCRIPT_DIR}/${ENTRYPOINT_SCRIPT_NAME}
+COPY ${ENTRYPOINT_SCRIPT_NAME} ${image_ENTRYPOINT_SCRIPT_DIR}
 
 # Install packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
@@ -69,5 +69,5 @@ ENV DOWNLOAD_TOOLCHAIN=""
 #####
 # Entrypoint Setup
 #####
-ENTRYPOINT ["/bin/bash", "-c", "${image_ENTRYPOINT_SCRIPT_DIR}/${ENTRYPOINT_SCRIPT_NAME}", "' \"$@\"'", "--"]
+ENTRYPOINT ["/bin/bash", "-c", "${image_ENTRYPOINT_SCRIPT_DIR}/${ENTRYPOINT_SCRIPT_NAME} \"${@}\"", "--"]
 CMD ["echo", "hello from inside the raxt"]

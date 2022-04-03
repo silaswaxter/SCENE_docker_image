@@ -18,4 +18,4 @@ export PATH=${image_TOOLCHAIN_DIR}/$(eval ${GET_TOOLCHAIN_FILENAME})/bin:$PATH
 #####
 # Run the interactive shell
 #####
-$@
+"${@}"
