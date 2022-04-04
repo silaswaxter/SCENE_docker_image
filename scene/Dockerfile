@@ -7,9 +7,11 @@ FROM ubuntu:latest
 # GLOBAL
 ENV TOOLCHAIN_SCRIPT_NAME="get_latest_gcc-arm-none-eabi.sh"
 ENV ENTRYPOINT_SCRIPT_NAME="container_entrypoint.sh"
+ENV USER_NAME="dev"
 
 # BUILD CONSTANTS
 ENV local_INSTALL_SCRIPTS_DIR="install_tools"
+ENV local_DOT_FILES_DIR="container_dot_files"
 
 # RESULTANT IMAGE CONSTANTS
 ENV image_CUSTOM_PACKAGES_INSTALL_DIR="/opt"
@@ -54,6 +56,12 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 		$(eval "${GET_TOOLCHAIN_FILENAME}") \
 		${image_INSTALL_SCRIPTS_DIR} \
 	&& apt-get clean
+
+# Add User
+RUN groupadd -r ${USER_NAME} \
+    && useradd -rlm -d /home/${USER_NAME} -g ${USER_NAME} ${USER_NAME}
+USER ${USER_NAME}
+COPY ${local_DOT_FILES_DIR} /home/${USER_NAME}
 
 #####
 # Constants Updates
