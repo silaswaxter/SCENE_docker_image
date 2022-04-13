@@ -63,6 +63,9 @@ RUN groupadd -r ${USER_NAME} \
 USER ${USER_NAME}
 COPY ${local_DOT_FILES_DIR} /home/${USER_NAME}
 
+# Start Container in User Home dir
+WORKDIR /home/${USER_NAME}
+
 #####
 # Constants Updates
 #####

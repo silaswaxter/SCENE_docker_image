@@ -1,4 +1,4 @@
 services:
   scene:
-    image: scene_test:latest
+    image: scene:latest
     build: .
