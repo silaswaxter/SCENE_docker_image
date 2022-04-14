@@ -40,3 +40,7 @@ and adding the binary path to the $PATH enviornment variable.
 
 ## Future Plans
 - Slim down unnecesary parts of the toolchain
+
+## Workflow
+- Attempting to use Trunk-Based Workflow (https://trunkbaseddevelopment.com)
+- Attempting to adhere to Semantic Versioning
