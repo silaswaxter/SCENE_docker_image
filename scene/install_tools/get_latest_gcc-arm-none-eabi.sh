@@ -13,22 +13,22 @@
 #####
 # Definitions
 #####
-# Absolute path to this script,    (eg /home/silas/bin/foo.sh)
-SCRIPT_NAME=$(readlink -f "$0")
-# Absolute path this script is in, (eg /home/silas/bin)
-SCRIPT_DIR=$(dirname "${SCRIPT_NAME}")
+# Absolute path of this script
+SCRIPT_FILE=$(readlink -f "${0}")
+# Absolute path to this script's directory
+SCRIPT_DIR=$(dirname "${SCRIPT_FILE}")
 
 
-# +/- Tolerance of Remote Toolchain Filesize (as fraction)
-declare -i NUMERATOR DENOMINATOR  #set integer attribute
-NUMERATOR="1"
-DENOMINATOR="50"
+# Tolerance between local and remote toolchain filesize (as fractional percent)
+declare -i TOOLCHAIN_SIZE_TOLERANCE_NUMERATOR TOOLCHAIN_SIZE_TOLERANCE_DENOMINATOR
+TOOLCHAIN_SIZE_TOLERANCE_NUMERATOR="1"
+TOOLCHAIN_SIZE_TOLERANCE_DENOMINATOR="50"
 
 # Where to save temp files and the toolchain
 OUTPUT_DIR="/opt/gcc-arm-none-eabi"
 
-flag_SILENT="false"
-flag_NAME_ONLY="false"
+SILENT_EXECUTION="false"
+FETCH_NAME_ONLY_EXECUTION="false"
 
 #####
 # Includes
@@ -38,8 +38,8 @@ flag_NAME_ONLY="false"
 #####
 # Parse Passed Flags
 #####
-while test $# -gt 0; do
-	case "$1" in
+while test ${#} -gt 0; do
+	case "${1}" in
 		-h|--help)
 			echo "USAGE:    get_latest_gcc-arm-none-eabi.sh [options]"
 			echo "ABOUT:    tool for downloading toolchain from ARM official downloads and"
@@ -55,13 +55,13 @@ while test $# -gt 0; do
       		exit 0
       		;;
     	-s)
-	  		flag_SILENT="true"
+	  		SILENT_EXECUTION="true"
 			shift
       		;;
     	-o)
       		shift
-      		if test $# -gt 0; then
-        		export OUTPUT_DIR=$1
+      		if test ${#} -gt 0; then
+        		export OUTPUT_DIR=${1}
       		else
         		echo "no output dir specified"
         		exit 1
@@ -69,8 +69,8 @@ while test $# -gt 0; do
       		shift
       		;;
     	--name-only)
-	  		flag_SILENT="true"
-	  		flag_NAME_ONLY="true"
+	  		SILENT_EXECUTION="true"
+	  		FETCH_NAME_ONLY_EXECUTION="true"
 			shift
       		;;
     	*)
@@ -79,11 +79,11 @@ while test $# -gt 0; do
 	esac
 done
 
-# FUNCTION:	only prints when flag_SILENT == false
+# FUNCTION:	conditionally print based on SILENT_EXECUTION flag
 # ARG1:		the message to print
 inform () {
-	if test "$flag_SILENT" = "false"; then
-		echo -e "$1"
+	if test "${SILENT_EXECUTION}" = "false"; then
+		echo -e "${1}"
 	fi
 }
 
@@ -91,27 +91,27 @@ inform () {
 # ARG1:		name of directory (no spaces)
 # ARG2:		name of file (no spaces)
 get_local_toolchain_filesize () {
-	ls -s "$1" | grep "$2$" | awk '{print $1}'
+	ls -s "${1}" | grep "${2}$" | awk '{print $1}'
 }
 
-# FUNCTION:	gets filesize of toolchain at download url provided
-# ARG1:		fileURL
+# FUNCTION:	gets filesize of toolchain at the provided download url
+# ARG1:		toolchain download url
 get_remote_toolchain_filesize () {
-	curl -sIL $1 | grep -i "content-length:" | awk '{print $2/1024}' | tail -n 1
+	curl -sIL ${1} | grep -i "content-length:" | awk '{print $2/1024}' | tail -n 1
 }
 
-# FUNCTION:	checks if the local toolchain filesize is whithin tolerance of remote's
+# FUNCTION:	checks that the local toolchain filesize is within tolerance of remote's filesize
 # ARG1:		local toolchain filesize
 # ARG2:		remote toolchain filesize
 # RETURN:	1 if true; 0 if false.
-is_local_toolchain_fs_within_tolerance () {
+is_local_toolchain_within_tolerance () {
 	declare -i DELTA UPPERBOUND LOWERBOUND   # set integer attribute
-	DELTA=$(expr $(expr $2 \* $NUMERATOR) / $DENOMINATOR)
-	UPPERBOUND=$(expr $2 + $DELTA)
-	LOWERBOUND=$(expr $2 - $DELTA)
+	DELTA=$(expr $(expr ${2} \* ${TOOLCHAIN_SIZE_TOLERANCE_NUMERATOR}) / ${TOOLCHAIN_SIZE_TOLERANCE_DENOMINATOR})
+	UPPERBOUND=$(expr ${2} + ${DELTA})
+	LOWERBOUND=$(expr ${2} - ${DELTA})
 
-	if test "$1" -le "$UPPERBOUND"; then
-		if test "$1" -ge "$LOWERBOUND"; then
+	if test "${1}" -le "${UPPERBOUND}"; then
+		if test "${1}" -ge "${LOWERBOUND}"; then
 			echo 1
 			return 1
 		else
@@ -122,83 +122,55 @@ is_local_toolchain_fs_within_tolerance () {
 }
 
 
-#####
 # Ensure Output Directory Exists
-#####
-mkdir -p $OUTPUT_DIR
+mkdir -p ${OUTPUT_DIR}
 
-#####
 # Retrieve Download Page
-####
-DOWNLOADS_PAGE_URL="https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/downloads"
-DOWNLOADS_PAGE_FILE="$OUTPUT_DIR/toolchain_download_page.html"
-
-inform "Retreiving Arm Downloads Page..."
-download_with_curl "$DOWNLOADS_PAGE_FILE" "$DOWNLOADS_PAGE_URL" "-s"
+DOWNLOADS_PAGE_URL="https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads"
+DOWNLOADS_PAGE_FILE="${OUTPUT_DIR}/toolchain_download_page.html"
+inform "Retrieving Arm Downloads Page..."
+download_with_curl "${DOWNLOADS_PAGE_FILE}" "${DOWNLOADS_PAGE_URL}" "-s"
 
 
-#####
-# Parse Download Page (for latest version and release date)
-#####
-PARSE_SED_REGEX="^\s*Arm GNU Toolchain: (\S*[^\r\n]) <.+?>(.+?)<\/span>"
+# Parse Download Page (for version and release date)
+inform "Parsing for Latest Toolchain Info..."
+LATEST_VERSION=$(sed -nE "s/.*>Version\W*(\d*.*)<.*/\1/p" ${DOWNLOADS_PAGE_FILE} | tr -d '\r')
+VERSION_DATE=$(sed -nE "s/.*>Released\W*([A-Z]+[a-z]+.*)<.*/\1/p" ${DOWNLOADS_PAGE_FILE} | tr -d '\r')
+inform "\t latest version:      ${LATEST_VERSION}"
+inform "\t released:            ${VERSION_DATE}\n"
+rm ${DOWNLOADS_PAGE_FILE}
 
-inform "Parsing for Latest Version Info..."
-LATEST_VERSION=$(sed -nE "s/$PARSE_SED_REGEX/\1/p" $DOWNLOADS_PAGE_FILE | tr -d '\r')
-VERSION_DATE=$(sed -nE "s/$PARSE_SED_REGEX/\2/p" $DOWNLOADS_PAGE_FILE | tr -d '\r')
-inform "\t latest version:\t $LATEST_VERSION"
-inform "\t released:\t\t $VERSION_DATE\n"
+TOOLCHAIN_DOWNLOAD_URL="https://developer.arm.com/-/media/Files/downloads/gnu/${LATEST_VERSION}/binrel/gcc-arm-${LATEST_VERSION}-x86_64-arm-none-eabi.tar.xz"
+TOOLCHAIN_FILE="${OUTPUT_DIR}/gcc-arm-none-eabi-${LATEST_VERSION}.tar.xz"
 
-# no longer need download page file
-rm $DOWNLOADS_PAGE_FILE
-
-#####
-# Pass Toolchain Filename to Parent via File
-#####
-TOOLCHAIN_FILE="$OUTPUT_DIR/gcc-arm-none-eabi-$LATEST_VERSION.tar.xz"
-
-if test "$flag_NAME_ONLY" = "true"; then
-	echo "$TOOLCHAIN_FILE"
+if test "${FETCH_NAME_ONLY_EXECUTION}" = "true"; then
+	echo "${TOOLCHAIN_FILE}"
 	exit 0
 fi
 
-
-#####
-# Should Download Toolchain?
-#####
-TOOLCHAIN_DOWNLOAD_URL="https://developer.arm.com/-/media/Files/downloads/gnu/$LATEST_VERSION/binrel/gcc-arm-$LATEST_VERSION-x86_64-arm-none-eabi.tar.xz"
-
-inform "Searching for Latest Toolchain... \"$TOOLCHAIN_FILE\""
-if test -e "$TOOLCHAIN_FILE"; then
+# Check if local toolchain is up-to-date
+inform "Searching for Latest Toolchain at \"${TOOLCHAIN_FILE}\"..."
+if test -e "${TOOLCHAIN_FILE}"; then
 	inform "\t local toolchain file found."
-	inform "\t Comparing Filesize Local vs Remote..."
-	LOCAL_TOOLCHAIN_FS=$(get_local_toolchain_filesize "$TOOLCHAIN_FILE")
-	REMOTE_TOOLCHAIN_FS=$(get_remote_toolchain_filesize "$TOOLCHAIN_DOWNLOAD_URL")
-	inform "\t\t local filesize:  $LOCAL_TOOLCHAIN_FS KB"
-	inform "\t\t remote filesize:  $REMOTE_TOOLCHAIN_FS KB"
-	IS_LOCAL_FS_GOOD=$(is_local_toolchain_fs_within_tolerance "$LOCAL_TOOLCHAIN_FS" "$REMOTE_TOOLCHAIN_FS")
-	if test "$IS_LOCAL_FS_GOOD" == "1"; then
-		inform "\t\t local toolchain within tolerance."
-		inform "\t\t Exiting..."
+	inform "\t comparing local vs remote file size..."
+	LOCAL_TOOLCHAIN_SIZE=$(get_local_toolchain_filesize "${TOOLCHAIN_FILE}")
+	REMOTE_TOOLCHAIN_SIZE=$(get_remote_toolchain_filesize "${TOOLCHAIN_DOWNLOAD_URL}")
+	inform "\t\t local filesize:  ${LOCAL_TOOLCHAIN_SIZE} KB"
+	inform "\t\t remote filesize:  ${REMOTE_TOOLCHAIN_SIZE} KB"
+    
+	if [ "$(is_local_toolchain_within_tolerance "${LOCAL_TOOLCHAIN_SIZE}" "${REMOTE_TOOLCHAIN_SIZE}")" -eq 1 ]; then
+		inform "\t local toolchain within tolerance."
 		exit 0
 	else
-		inform "\t\t local toolchain NOT within tolerance."
-		inform "\t\t Renaming Local Toolchain File..."
-		mv "$TOOLCHAIN_FILE" "$TOOLCHAIN_FILE.moved_by_arm_script"
+		inform "\t local toolchain NOT within tolerance."
+		inform "\t renaming local toolchain file..."
+		mv "${TOOLCHAIN_FILE}" "${TOOLCHAIN_FILE}.moved_by_arm_script"
 	fi
 else
 	inform "\t local toolchain NOT found."
 fi
-inform "\n"
 
+inform "\nDownloading Toolchain..."
+download_with_curl "${TOOLCHAIN_FILE}" "${TOOLCHAIN_DOWNLOAD_URL}"
 
-#####
-# Downloading Toolchain
-#####
-inform "Downloading Toolchain..."
-download_with_curl "$TOOLCHAIN_FILE" "$TOOLCHAIN_DOWNLOAD_URL"
-
-#####
-# End of Script
-#####
-inform "Exiting..."
 exit 0
