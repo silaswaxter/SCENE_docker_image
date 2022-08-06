@@ -9,7 +9,7 @@ _____/\\\______\//\\\___\///\\\__________\/\\\_____________\/\\\__\//\\\\\\_\/\\
 _____\///\\\\\\\\\\\/______\////\\\\\\\\\_\/\\\\\\\\\\\\\\\_\/\\\___\//\\\\\_\/\\\\\\\\\\\\\\\_
 ________\///////////___________\/////////__\///////////////__\///_____\/////__\///////////////_
 ```
-# Standard Custom Embedded iNventive Environment
+# Standard Custom Extendable Integrated Environment
 The goal of this project is to create a standard development environment using docker.  Code
 created with this targets arm microcontrollers;  toolchain is the gcc-arm-none-eabi (C/C++ and 
 distributed by arm).  
